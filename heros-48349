@@ -1,0 +1,31 @@
+# Use a base image that includes Python 3.8
+FROM python:3.8-slim-buster AS build
+
+# Set environment variables for pipenv
+ENV PIPENV_VENV_IN_PROJECT=1
+
+# Install dependencies for pipenv
+RUN apt-get update && apt-get install -y \
+    python3.8 \
+    python3.8-venv \
+    python3.8-dev \
+    build-essential \
+    && apt-get clean
+
+# Upgrade pip and install pipenv
+RUN pip install --upgrade pip
+RUN pip install pipenv
+
+# Copy application files
+COPY backend/Pipfile backend/Pipfile.lock /
+
+# Install dependencies via pipenv
+RUN pipenv install --deploy
+
+# Copy application code
+COPY backend/modules/ /modules/
+
+# Set the entrypoint for the container
+ENTRYPOINT ["pipenv", "run", "python", "heros.py"]
+docker build -t Heros .
+docker run -d -p 8000:8000 heros
